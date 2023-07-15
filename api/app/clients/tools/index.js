@@ -7,6 +7,8 @@ const StableDiffusionAPI = require('./StableDiffusion');
 const WolframAlphaAPI = require('./Wolfram');
 const StructuredWolfram = require('./structured/Wolfram');
 const SelfReflectionTool = require('./SelfReflection');
+const WebQA = require('./WebQA');
+const SearchQA = require('./SearchQA');
 const availableTools = require('./manifest.json');
 
 module.exports = {
@@ -20,4 +22,6 @@ module.exports = {
   WolframAlphaAPI,
   StructuredWolfram,
   SelfReflectionTool,
+  WebQA,
+  SearchQA,
 };

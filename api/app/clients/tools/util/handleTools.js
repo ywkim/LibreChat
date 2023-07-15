@@ -15,6 +15,8 @@ const {
   OpenAICreateImage,
   StableDiffusionAPI,
   StructuredSD,
+  WebQA,
+  SearchQA,
 } = require('../');
 const { loadSpecs } = require('./loadSpecs');
 
@@ -114,6 +116,29 @@ const loadTools = async ({ user, model, functions = null, tools = [], options = 
           new ChatOpenAI({ openAIApiKey: options.openAIApiKey, temperature: 0 }),
         ),
       ];
+    },
+    'webpage-qa': async () => {
+      let openAIApiKey = process.env.OPENAI_API_KEY;
+      if (!openAIApiKey) {
+        openAIApiKey = await getUserPluginAuthValue(user, 'OPENAI_API_KEY');
+      }
+      console.log(WebQA);
+      return new WebQA({ llm: model, embeddings: new OpenAIEmbeddings({ openAIApiKey }) });
+    },
+    'search-qa': async () => {
+      let openAIApiKey = process.env.OPENAI_API_KEY;
+      let serpAPIApiKey = process.env.SERPAPI_API_KEY;
+      if (!serpAPIApiKey) {
+        serpAPIApiKey = await getUserPluginAuthValue(user, 'SERPAPI_API_KEY');
+      }
+      if (!openAIApiKey) {
+        openAIApiKey = await getUserPluginAuthValue(user, 'OPENAI_API_KEY');
+      }
+      return new SearchQA({
+        llm: model,
+        embeddings: new OpenAIEmbeddings({ openAIApiKey }),
+        apiKey: serpAPIApiKey,
+      });
     },
   };
 
