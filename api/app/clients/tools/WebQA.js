@@ -1,11 +1,11 @@
 const { StructuredTool, ToolParams } = require('langchain/tools');
 const { OpenAI } = require('langchain/llms/openai');
 const { loadQARefineChain } = require('langchain/chains');
-const { CheerioWebBaseLoader } = require('langchain/document_loaders/web/cheerio');
-const { MemoryVectorStore } = require('langchain/vectorstores/memory');
+const { PlaywrightWebBaseLoader } = require('langchain/document_loaders/web/playwright');
 const { OpenAIEmbeddings } = require('langchain/embeddings/openai');
 const { RecursiveCharacterTextSplitter } = require('langchain/text_splitter');
 const { z } = require('zod');
+const { Page, Frame } = require('playwright');
 
 const getMaxTokens = (modelName) => {
   if (modelName.startsWith('gpt-3.5-turbo-16k')) {
@@ -20,12 +20,20 @@ const getMaxTokens = (modelName) => {
   return 4096;
 };
 
+const processPage = async (page) => {
+  const pageText = await page.innerText('body');
+  const title = await page.title();
+
+  // If it can be created as a separate Document, would it be better?
+  return `# ${title}\n\n${pageText}`;
+};
+
 class WebQA extends StructuredTool {
   name = 'ask-webpage';
   description = 'Use this when you need to answer questions about specific webpages';
   schema = z.object({
     question: z.string().describe('should be a question on response content'),
-    urls: z.array(z.string()).describe('should be a list of strings')
+    url: z.string().describe('should be a string'),
   });
 
   constructor({ embeddings, llm }) {
@@ -34,10 +42,24 @@ class WebQA extends StructuredTool {
     this.llm = llm;
   }
 
-  async _call({ question, urls }) {
-    console.log(`WebQA question: ${question}, url: ${urls}, llm: ${this.llm.modelName}`);
+  async _call({ question, url }) {
+    console.log(`WebQA question: ${question}, url: ${url}, llm: ${this.llm.modelName}`);
     try {
-      const loader = new CheerioWebBaseLoader(urls[0]);
+      const loader = new PlaywrightWebBaseLoader(url, {
+        gotoOptions: { waitUntil: 'networkidle' },
+        evaluate: async (page) => {
+          const pageText = await processPage(page);
+          const iframeElement = await page.$('iframe');
+          if (iframeElement) {
+            const iframePage = await iframeElement.contentFrame();
+            if (iframePage) {
+              const iframeText = await processPage(iframePage);
+              return (pageText ?? '') + '\n\n' + (iframeText ?? '');
+            }
+          }
+          return pageText ?? '';
+        },
+      });
 
       const maxToken = getMaxTokens(this.llm.modelName);
 
@@ -48,7 +70,7 @@ class WebQA extends StructuredTool {
       const splitter = new RecursiveCharacterTextSplitter({
         chunkSize,
         chunkOverlap,
-        lengthFunction
+        lengthFunction,
       });
 
       // Using loadAndSplit cuts the document in the wrong place, and as a result similarity search doesn't seem to work either.
@@ -64,7 +86,7 @@ class WebQA extends StructuredTool {
       const chain = loadQARefineChain(this.llm);
       const answer = await chain.call({
         input_documents: docs,
-        question
+        question,
       });
 
       return answer.output_text;
