@@ -21,15 +21,16 @@ const getMaxTokens = (modelName: string): number => {
 };
 
 // If it can be created as a separate Document, would it be better?
-const processPage = async (page: Page | Frame): Promise<string> => {
-    const pageText = await page.innerText('body');
+const evaluateFrameContent = async (page: Page | Frame): Promise<string> => {
+    const body = page.locator('body');
+    const bodyText = await body.innerText();
     const title = await page.title();
 
     if (title) {
-        return `# ${title}\n\n${pageText}`;
+        return `# ${title}\n\n${bodyText}`;
     }
 
-    return pageText;
+    return bodyText;
 };
 
 interface WebQASchema {
@@ -61,19 +62,12 @@ export default class WebQA extends StructuredTool {
         console.log(`WebQA question: ${question}, url: ${url}, llm: ${this.llm.modelName}`);
         try {
             const loader = new PlaywrightWebBaseLoader(url, {
-                gotoOptions: { waitUntil: 'networkidle' },
+                gotoOptions: { waitUntil: 'load' },
                 evaluate: async (page: Page): Promise<string> => {
-                    const pageText = await processPage(page);
-                    const iframeElement = await page.$('iframe');
-                    if (iframeElement) {
-                        const iframePage = await iframeElement.contentFrame();
-                        if (iframePage) {
-                            const iframeText = await processPage(iframePage);
-                            return (pageText ?? '') + '\n\n' + (iframeText ?? '');
-                        }
-                    }
-                    return pageText ?? '';
-                },
+                    const frames = page.frames();
+                    const contents = await Promise.all(frames.map(evaluateFrameContent));
+                    return contents.join('\n\n');
+                }
             });
 
             const maxToken = getMaxTokens(this.llm.modelName);
