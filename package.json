@@ -32,7 +32,8 @@
     "prepare": "node config/prepare.js",
     "lint:fix": "eslint --fix \"{,!(node_modules)/**/}*.{js,jsx,ts,tsx}\"",
     "lint": "eslint \"{,!(node_modules)/**/}*.{js,jsx,ts,tsx}\"",
-    "format": "prettier-eslint --write \"{,!(node_modules)/**/}*.{js,jsx,ts,tsx}\""
+    "format": "prettier-eslint --write \"{,!(node_modules)/**/}*.{js,jsx,ts,tsx}\"",
+    "ask": "dotenv -- ts-node ask.ts"
   },
   "repository": {
     "type": "git",
@@ -53,6 +54,7 @@
     "@typescript-eslint/parser": "^5.59.6",
     "babel-eslint": "^10.1.0",
     "cross-env": "^7.0.3",
+    "dotenv": "^16.3.1",
     "eslint": "^8.41.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.8.0",
