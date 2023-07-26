@@ -1,6 +1,6 @@
 import { StructuredTool, ToolParams } from 'langchain/tools';
 import { OpenAI } from 'langchain/llms/openai';
-import { loadQARefineChain } from 'langchain/chains';
+import { loadQARefineChain, RetrievalQAChain } from 'langchain/chains';
 import { Document } from 'langchain/document';
 import { BaseDocumentLoader } from 'langchain/document_loaders/base';
 import type { DocumentLoader } from 'langchain/document_loaders/base';
@@ -8,6 +8,7 @@ import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { z } from 'zod';
 import { LaunchOptions, Page, Browser, Response, Frame } from 'playwright';
+import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 
 export type PlaywrightGotoOptions = {
     referer?: string;
@@ -138,10 +139,12 @@ export default class WebQA extends StructuredTool {
     });
 
     private llm: OpenAI;
+    private embeddings: OpenAIEmbeddings;
 
-    constructor({ llm }: WebQAArgs) {
+    constructor({ llm, embeddings }: WebQAArgs) {
         super();
         this.llm = llm;
+        this.embeddings = embeddings;
     }
 
     async _call({ question, url }: WebQASchema): Promise<string> {
@@ -175,23 +178,44 @@ export default class WebQA extends StructuredTool {
                 lengthFunction,
             });
 
-            // Using loadAndSplit cuts the document in the wrong place, and as a result similarity search doesn't seem to work either.
-            // So instead of using MemoryVectorStore.fromDocuments and RetreivalQAChain.fromLLM, we do refine document QA.
             const docs = await loader.loadAndSplit(splitter);
 
-            console.log(`< ======= docs (total: ${docs.length}) ======= >`);
-            docs.forEach((doc, i) => {
-                console.log(`\n[Document ${i}]\n`);
-                console.log(doc);
-            });
+            const combineDocumentsChain = await loadQARefineChain(this.llm);
 
-            const chain = loadQARefineChain(this.llm);
-            const answer = await chain.call({
-                input_documents: docs,
-                question,
-            });
+            // If the number of documents is greater than 4, we use RetrievalQAChain with MemoryVectorStore.
+            // This is more efficient for large documents as it allows us to perform similarity search on the documents in memory.
+            if (docs.length <= 4) {
+                console.log(`< ======= docs (total: ${docs.length}) ======= >`);
+                docs.forEach((doc, i) => {
+                    console.log(`\n[Document ${i}]\n`);
+                    console.log(doc);
+                });
 
-            return answer.output_text;
+                // If there are 4 or fewer documents, use the original method.
+                const answer = await combineDocumentsChain.call({
+                    input_documents: docs,
+                    question,
+                });
+                return answer.output_text;
+            } else {
+                // If there are more than 4 documents, use the RetrievalQAChain.
+                const vectorStore = await MemoryVectorStore.fromDocuments(docs, this.embeddings);
+                const retriever = vectorStore.asRetriever();
+
+                const relevantDocs = await retriever.getRelevantDocuments(question);
+                console.log(`< ======= docs (relevant: ${relevantDocs.length}, total: ${docs.length}) ======= >`);
+                relevantDocs.forEach((doc, i) => {
+                    console.log(`\n[Relevant Document ${i}]\n`);
+                    console.log(doc);
+                });
+
+                const chain = new RetrievalQAChain({
+                    combineDocumentsChain: combineDocumentsChain,
+                    retriever: retriever,
+                });
+                const result = await chain.call({query: question});
+                return result.text;
+            }
         } catch (e) {
             console.error(e);
             throw new Error(String(e));
