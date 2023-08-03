@@ -7,7 +7,7 @@ import type { DocumentLoader } from 'langchain/document_loaders/base';
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { z } from 'zod';
-import { LaunchOptions, Page, Browser, Response, Frame } from 'playwright';
+import { LaunchOptions, Page, Browser, Response, Frame, Locator } from 'playwright';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 
 export type PlaywrightGotoOptions = {
@@ -109,6 +109,9 @@ const getMaxTokens = (modelName: string): number => {
 
 // If it can be created as a separate Document, would it be better?
 const evaluateFrameContent = async (page: Page | Frame): Promise<string> => {
+    const scripts: Locator = page.locator('script');
+    await scripts.evaluateAll(scripts => scripts.forEach(script => script.remove()));
+
     const body = page.locator('body');
     const bodyText = await body.innerText();
     const title = await page.title();
@@ -184,6 +187,7 @@ export default class WebQA extends StructuredTool {
 
             // If the number of documents is greater than 4, we use RetrievalQAChain with MemoryVectorStore.
             // This is more efficient for large documents as it allows us to perform similarity search on the documents in memory.
+
             if (docs.length <= 4) {
                 console.log(`< ======= docs (total: ${docs.length}) ======= >`);
                 docs.forEach((doc, i) => {
@@ -213,7 +217,7 @@ export default class WebQA extends StructuredTool {
                     combineDocumentsChain: combineDocumentsChain,
                     retriever: retriever,
                 });
-                const result = await chain.call({query: question});
+                const result = await chain.call({ query: question });
                 return result.text;
             }
         } catch (e) {
