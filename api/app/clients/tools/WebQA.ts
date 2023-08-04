@@ -1,5 +1,5 @@
 import { StructuredTool, ToolParams } from 'langchain/tools';
-import { OpenAI } from 'langchain/llms/openai';
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { loadQARefineChain, RetrievalQAChain } from 'langchain/chains';
 import { Document } from 'langchain/document';
 import { BaseDocumentLoader } from 'langchain/document_loaders/base';
@@ -127,7 +127,7 @@ interface WebQASchema {
 
 interface WebQAArgs extends ToolParams {
     embeddings: OpenAIEmbeddings;
-    llm: OpenAI;
+    llm: ChatOpenAI;
 }
 
 export default class WebQA extends StructuredTool {
@@ -138,7 +138,7 @@ export default class WebQA extends StructuredTool {
         url: z.string().describe('should be a string'),
     });
 
-    private llm: OpenAI;
+    private llm: ChatOpenAI;
     private embeddings: OpenAIEmbeddings;
 
     constructor({ llm, embeddings }: WebQAArgs) {

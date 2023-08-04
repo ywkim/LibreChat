@@ -5,6 +5,7 @@ const { SerpAPI, ZapierNLAWrapper } = require('langchain/tools');
 const { ChatOpenAI } = require('langchain/chat_models/openai');
 const { Calculator } = require('langchain/tools/calculator');
 const { WebBrowser } = require('langchain/tools/webbrowser');
+const { PineconeClient } = require('@pinecone-database/pinecone');
 const {
   availableTools,
   AIPluginTool,
@@ -17,6 +18,7 @@ const {
   StructuredSD,
   WebQA,
   SearchQA,
+  BookQA,
 } = require('../');
 const { loadSpecs } = require('./loadSpecs');
 
@@ -138,6 +140,35 @@ const loadTools = async ({ user, model, functions = null, tools = [], options = 
         llm: model,
         embeddings: new OpenAIEmbeddings({ openAIApiKey }),
         apiKey: serpAPIApiKey,
+      });
+    },
+    'book-qa': async () => {
+      let openAIApiKey = process.env.OPENAI_API_KEY;
+      let pineconeApiKey = process.env.PINECONE_API_KEY;
+      let pineconeEnvironment = process.env.PINECONE_ENVIRONMENT;
+      let indexName = process.env.PINECONE_INDEX;
+      if (!pineconeApiKey) {
+        pineconeApiKey = await getUserPluginAuthValue(user, 'PINECONE_API_KEY');
+      }
+      if (!pineconeEnvironment) {
+        pineconeEnvironment = await getUserPluginAuthValue(user, 'PINECONE_ENVIRONMENT');
+      }
+      if (!indexName) {
+        indexName = await getUserPluginAuthValue(user, 'PINECONE_INDEX');
+      }
+      if (!openAIApiKey) {
+        openAIApiKey = await getUserPluginAuthValue(user, 'OPENAI_API_KEY');
+      }
+      const client = new PineconeClient();
+      await client.init({
+        apiKey: pineconeApiKey,
+        environment: pineconeEnvironment,
+      });
+      const pineconeIndex = client.Index(indexName);
+      return new BookQA({
+        llm: model,
+        embeddings: new OpenAIEmbeddings({ openAIApiKey }),
+        pineconeIndex,
       });
     },
   };
