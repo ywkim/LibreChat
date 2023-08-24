@@ -4,4 +4,7 @@ module.exports = {
   roots: ['<rootDir>'],
   coverageDirectory: 'coverage',
   setupFiles: ['./test/jestSetup.js'],
+  transform: {
+    '^.+\\.tsx?$': 'ts-jest',
+  },
 };
