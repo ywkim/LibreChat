@@ -6,5 +6,6 @@ module.exports = {
   setupFiles: ['./test/jestSetup.js'],
   transform: {
     '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.jsx?$': 'babel-jest',
   },
 };
