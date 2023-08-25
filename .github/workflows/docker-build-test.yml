@@ -1,0 +1,35 @@
+name: Docker Build Test
+
+# This workflow is triggered on push or pull requests to the main, dev or release/* branches
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - release/*
+  pull_request:
+    branches:
+      - main
+      - dev
+      - release/*
+
+jobs:
+  docker_build_test:
+    name: Test Docker Image Build
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Set up Docker
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v1
+
+      # Build Docker image
+      - name: Build Docker image
+        run: docker build . --file Dockerfile
+
+      # If the Docker build command completes successfully, the Docker image is likely good
+      # However, you might want to add additional steps to test the Docker image more thoroughly
