@@ -8,6 +8,7 @@ COPY . /app
 # Install dependencies
 WORKDIR /app
 RUN npm ci
+RUN npm install -g ts-node
 
 # React client build
 ENV NODE_OPTIONS="--max-old-space-size=2048"
@@ -16,7 +17,7 @@ RUN npm run frontend
 # Node API setup
 EXPOSE 3080
 ENV HOST=0.0.0.0
-CMD ["npm", "run", "backend"]
+CMD ["npm", "run", "backend:dev"]
 
 # Optional: for client with nginx routing
 # FROM nginx:stable-alpine AS nginx-client
