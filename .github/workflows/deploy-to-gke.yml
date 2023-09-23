@@ -45,7 +45,7 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        IMAGE=gcr.io/${{ env.GCLOUD_PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}
+        IMAGE=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}
         docker build -t ${IMAGE} .
         docker push ${IMAGE}
 
@@ -58,7 +58,7 @@ jobs:
 
     - name: Update image in deployment
       run: |
-        IMAGE=gcr.io/${{ env.GCLOUD_PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}
+        IMAGE=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}
         kubectl set image deployment/${{ env.APP_NAME }} ${{ env.APP_NAME }}=${IMAGE}
 
     - name: Verify deployment
