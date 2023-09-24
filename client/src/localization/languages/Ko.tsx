@@ -63,6 +63,8 @@ export default {
   com_auth_username_min_length: '사용자명은 최소 3자 이상이어야 합니다',
   com_auth_username_max_length: '사용자명은 20자를 초과할 수 없습니다',
   com_auth_already_have_account: '이미 계정이 있으신가요?',
+  com_auth_tough_registration: '가입이 잘 안되나요? 😅 슬랙에서 같이 이야기해요.',
+  com_auth_join_slack: 'Join Slack',
   com_auth_login: '로그인',
   com_auth_reset_password: '비밀번호 재설정',
   com_auth_click: '클릭',
