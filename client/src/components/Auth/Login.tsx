@@ -37,15 +37,15 @@ function Login() {
         <LoginForm onSubmit={login} />
         {startupConfig?.slackInviteEnabled && (
           <p className="my-4 text-center text-sm font-light text-gray-700">
-            {localize(lang, 'com_auth_tough_registration')}{' '}
+            {localize('com_auth_tough_registration')}{' '}
             <a
               href={startupConfig?.slackInviteUrl}
-              aria-label={localize(lang, 'com_auth_join_slack')}
+              aria-label={localize('com_auth_join_slack')}
               target="_blank"
               rel="noopener noreferrer"
               className="p-1 font-medium text-green-500 hover:underline"
             >
-              {localize(lang, 'com_auth_join_slack')}
+              {localize('com_auth_join_slack')}
             </a>
           </p>
         )}
