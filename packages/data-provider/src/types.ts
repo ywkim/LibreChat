@@ -257,6 +257,8 @@ export type TStartupConfig = {
   serverDomain: string;
   registrationEnabled: boolean;
   socialLoginEnabled: boolean;
+  slackInviteEnabled: boolean;
+  slackInviteUrl: string;
 };
 
 export type TRefreshTokenResponse = {
