@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: librechat-ingress
+  annotations:
+    networking.gke.io/managed-certificates: librechat-certificate
+    kubernetes.io/ingress.global-static-ip-name: librechat-ip
+spec:
+  rules:
+  - host: "aluvu.io"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: librechat-service
+            port:
+              number: 80

@@ -1,0 +1,61 @@
+name: Continuous Deployment to GKE
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: alola-librechat
+      APP_NAME: librechat
+      CLUSTER_NAME: librechat
+      ZONE: asia-northeast3-b
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCLOUD_AUTH }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+
+    - name: Configure Docker to use gcloud command-line tool as a credential helper
+      run: gcloud auth configure-docker
+
+    - name: Get GKE credentials
+      uses: google-github-actions/get-gke-credentials@v1
+      with:
+        cluster_name: ${{ env.CLUSTER_NAME }}
+        location: ${{ env.ZONE }}
+        credentials: ${{ secrets.GCLOUD_AUTH }}
+
+    - name: Build and push Docker image
+      run: |
+        IMAGE=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}
+        docker build -t ${IMAGE} .
+        docker push ${IMAGE}
+
+    - name: Deploy to GKE
+      run: |
+        kubectl apply -f kubernetes/librechat-deployment.yaml
+        kubectl apply -f kubernetes/librechat-service.yaml
+        kubectl apply -f kubernetes/librechat-managed-cert.yaml
+        kubectl apply -f kubernetes/librechat-ingress.yaml
+
+    - name: Update image in deployment
+      run: |
+        IMAGE=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}
+        kubectl set image deployment/${{ env.APP_NAME }} ${{ env.APP_NAME }}=${IMAGE}
+
+    - name: Verify deployment
+      run: |
+        sleep 60
+        kubectl get deployments
+        kubectl get services
