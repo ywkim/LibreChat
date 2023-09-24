@@ -1,5 +1,7 @@
 import * as t from './types';
 import * as s from './schemas';
+/* TODO: fix dependency cycle */
+// eslint-disable-next-line import/no-cycle
 import request from './request';
 import * as endpoints from './api-endpoints';
 
@@ -24,8 +26,16 @@ export function clearAllConversations(): Promise<unknown> {
   return request.post(endpoints.deleteConversation(), { arg: {} });
 }
 
-export function getMessagesByConvoId(id: string): Promise<s.TMessage[]> {
-  return request.get(endpoints.messages(id));
+export function revokeUserKey(name: string): Promise<unknown> {
+  return request.delete(endpoints.revokeUserKey(name));
+}
+
+export function revokeAllUserKeys(): Promise<unknown> {
+  return request.delete(endpoints.revokeAllUserKeys());
+}
+
+export function getMessagesByConvoId(conversationId: string): Promise<s.TMessage[]> {
+  return request.get(endpoints.messages(conversationId));
 }
 
 export function getConversationById(id: string): Promise<s.TConversation> {
@@ -36,6 +46,24 @@ export function updateConversation(
   payload: t.TUpdateConversationRequest,
 ): Promise<t.TUpdateConversationResponse> {
   return request.post(endpoints.updateConversation(), { arg: payload });
+}
+
+export function updateMessage(payload: t.TUpdateMessageRequest): Promise<unknown> {
+  const { conversationId, messageId, text } = payload;
+  if (!conversationId) {
+    throw new Error('conversationId is required');
+  }
+
+  return request.put(endpoints.messages(conversationId, messageId), { text });
+}
+
+export function updateUserKey(payload: t.TUpdateUserKeyRequest) {
+  const { value } = payload;
+  if (!value) {
+    throw new Error('value is required');
+  }
+
+  return request.put(endpoints.keys(), payload);
 }
 
 export function getPresets(): Promise<s.TPreset[]> {
@@ -73,6 +101,10 @@ export const getAIEndpoints = () => {
   return request.get(endpoints.aiEndpoints());
 };
 
+export const getModels = () => {
+  return request.get(endpoints.models());
+};
+
 export const updateTokenCount = (text: string) => {
   return request.post(endpoints.tokenizer(), { arg: text });
 };
@@ -89,9 +121,10 @@ export const register = (payload: t.TRegisterUser) => {
   return request.post(endpoints.register(), payload);
 };
 
-export const refreshToken = () => {
-  return request.post(endpoints.refreshToken());
-};
+export const refreshToken = () => request.post(endpoints.refreshToken());
+
+export const userKeyQuery = (name: string): Promise<t.TCheckUserKeyResponse> =>
+  request.get(endpoints.userKeyQuery(name));
 
 export const getLoginGoogle = () => {
   return request.get(endpoints.loginGoogle());

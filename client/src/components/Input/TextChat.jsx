@@ -10,22 +10,18 @@ import { cn } from '~/utils';
 import store from '~/store';
 
 export default function TextChat({ isSearchView = false }) {
-  const inputRef = useRef(null);
-  const isComposing = useRef(false);
-
+  const { ask, isSubmitting, handleStopGenerating, latestMessage, endpointsConfig } =
+    useMessageHandler();
+  const conversation = useRecoilValue(store.conversation);
+  const setShowBingToneSetting = useSetRecoilState(store.showBingToneSetting);
   const [text, setText] = useRecoilState(store.text);
   const { theme } = useContext(ThemeContext);
-  const conversation = useRecoilValue(store.conversation);
-  const latestMessage = useRecoilValue(store.latestMessage);
-
-  const endpointsConfig = useRecoilValue(store.endpointsConfig);
-  const isSubmitting = useRecoilValue(store.isSubmitting);
-  const setShowBingToneSetting = useSetRecoilState(store.showBingToneSetting);
+  const isComposing = useRef(false);
+  const inputRef = useRef(null);
 
   // TODO: do we need this?
   const disabled = false;
 
-  const { ask, stopGenerating } = useMessageHandler();
   const isNotAppendable = latestMessage?.unfinished & !isSubmitting || latestMessage?.error;
   const { conversationId, jailbreak } = conversation || {};
 
@@ -58,11 +54,6 @@ export default function TextChat({ isSearchView = false }) {
   const submitMessage = () => {
     ask({ text });
     setText('');
-  };
-
-  const handleStopGenerating = (e) => {
-    e.preventDefault();
-    stopGenerating();
   };
 
   const handleKeyDown = (e) => {
@@ -178,12 +169,12 @@ export default function TextChat({ isSearchView = false }) {
                   className="m-0 flex h-auto max-h-52 flex-1 resize-none overflow-auto border-0 bg-transparent p-0 pl-2 pr-12 leading-6 placeholder:text-sm placeholder:text-gray-600 focus:outline-none focus:ring-0 focus-visible:ring-0 dark:bg-transparent dark:placeholder:text-gray-500 md:pl-2"
                 />
                 <SubmitButton
+                  conversation={conversation}
                   submitMessage={submitMessage}
                   handleStopGenerating={handleStopGenerating}
                   disabled={disabled || isNotAppendable}
                   isSubmitting={isSubmitting}
-                  endpointsConfig={endpointsConfig}
-                  endpoint={conversation?.endpoint}
+                  userProvidesKey={endpointsConfig?.[conversation.endpoint]?.userProvide}
                 />
               </div>
             </div>

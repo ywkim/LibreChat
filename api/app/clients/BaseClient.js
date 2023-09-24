@@ -3,13 +3,14 @@ const TextStream = require('./TextStream');
 const { RecursiveCharacterTextSplitter } = require('langchain/text_splitter');
 const { ChatOpenAI } = require('langchain/chat_models/openai');
 const { loadSummarizationChain } = require('langchain/chains');
-const { refinePrompt } = require('./prompts/refinePrompt');
 const { getConvo, getMessages, saveMessage, updateMessage, saveConvo } = require('../../models');
+const { addSpaceIfNeeded } = require('../../server/utils');
+const { refinePrompt } = require('./prompts');
 
 class BaseClient {
   constructor(apiKey, options = {}) {
     this.apiKey = apiKey;
-    this.sender = options.sender || 'AI';
+    this.sender = options.sender ?? 'AI';
     this.contextStrategy = null;
     this.currentDateString = new Date().toLocaleDateString('en-us', {
       year: 'numeric',
@@ -51,18 +52,29 @@ class BaseClient {
     if (opts && typeof opts === 'object') {
       this.setOptions(opts);
     }
-    const user = opts.user || null;
-    const conversationId = opts.conversationId || crypto.randomUUID();
-    const parentMessageId = opts.parentMessageId || '00000000-0000-0000-0000-000000000000';
-    const userMessageId = opts.overrideParentMessageId || crypto.randomUUID();
-    const responseMessageId = crypto.randomUUID();
+
+    const { isEdited, isContinued } = opts;
+    const user = opts.user ?? null;
+    this.user = user;
     const saveOptions = this.getSaveOptions();
-    this.abortController = opts.abortController || new AbortController();
-    this.currentMessages = (await this.loadHistory(conversationId, parentMessageId)) ?? [];
+    this.abortController = opts.abortController ?? new AbortController();
+    const conversationId = opts.conversationId ?? crypto.randomUUID();
+    const parentMessageId = opts.parentMessageId ?? '00000000-0000-0000-0000-000000000000';
+    const userMessageId = opts.overrideParentMessageId ?? crypto.randomUUID();
+    let responseMessageId = opts.responseMessageId ?? crypto.randomUUID();
+    let head = isEdited ? responseMessageId : parentMessageId;
+    this.currentMessages = (await this.loadHistory(conversationId, head)) ?? [];
+
+    if (isEdited && !isContinued) {
+      responseMessageId = crypto.randomUUID();
+      head = responseMessageId;
+      this.currentMessages[this.currentMessages.length - 1].messageId = head;
+    }
 
     return {
       ...opts,
       user,
+      head,
       conversationId,
       parentMessageId,
       userMessageId,
@@ -72,7 +84,7 @@ class BaseClient {
   }
 
   createUserMessage({ messageId, parentMessageId, conversationId, text }) {
-    const userMessage = {
+    return {
       messageId,
       parentMessageId,
       conversationId,
@@ -80,19 +92,27 @@ class BaseClient {
       text,
       isCreatedByUser: true,
     };
-    return userMessage;
   }
 
   async handleStartMethods(message, opts) {
-    const { user, conversationId, parentMessageId, userMessageId, responseMessageId, saveOptions } =
-      await this.setMessageOptions(opts);
-
-    const userMessage = this.createUserMessage({
-      messageId: userMessageId,
-      parentMessageId,
+    const {
+      user,
+      head,
       conversationId,
-      text: message,
-    });
+      parentMessageId,
+      userMessageId,
+      responseMessageId,
+      saveOptions,
+    } = await this.setMessageOptions(opts);
+
+    const userMessage = opts.isEdited
+      ? this.currentMessages[this.currentMessages.length - 2]
+      : this.createUserMessage({
+        messageId: userMessageId,
+        parentMessageId,
+        conversationId,
+        text: message,
+      });
 
     if (typeof opts?.getIds === 'function') {
       opts.getIds({
@@ -109,6 +129,7 @@ class BaseClient {
     return {
       ...opts,
       user,
+      head,
       conversationId,
       responseMessageId,
       saveOptions,
@@ -251,7 +272,9 @@ class BaseClient {
    * @returns {Object} An object with three properties: `context`, `remainingContextTokens`, and `messagesToRefine`. `context` is an array of messages that fit within the token limit. `remainingContextTokens` is the number of tokens remaining within the limit after adding the messages to the context. `messagesToRefine` is an array of messages that were not added to the context because they would have exceeded the token limit.
    */
   async getMessagesWithinTokenLimit(messages) {
-    let currentTokenCount = 0;
+    // Every reply is primed with <|start|>assistant<|message|>, so we
+    // start with 3 tokens for the label after all messages have been counted.
+    let currentTokenCount = 3;
     let context = [];
     let messagesToRefine = [];
     let refineIndex = -1;
@@ -373,7 +396,7 @@ class BaseClient {
 
     if (this.options.debug) {
       console.debug('<-------------------------PAYLOAD/TOKEN COUNT MAP------------------------->');
-      console.debug('Payload:', payload);
+      // console.debug('Payload:', payload);
       console.debug('Token Count Map:', tokenCountMap);
       console.debug('Prompt Tokens', promptTokens, remainingContextTokens, this.maxContextTokens);
     }
@@ -382,13 +405,33 @@ class BaseClient {
   }
 
   async sendMessage(message, opts = {}) {
-    const { user, conversationId, responseMessageId, saveOptions, userMessage } =
+    const { user, head, isEdited, conversationId, responseMessageId, saveOptions, userMessage } =
       await this.handleStartMethods(message, opts);
 
-    this.user = user;
+    const { generation = '' } = opts;
+
     // It's not necessary to push to currentMessages
     // depending on subclass implementation of handling messages
-    this.currentMessages.push(userMessage);
+    // When this is an edit, all messages are already in currentMessages, both user and response
+    if (isEdited) {
+      let latestMessage = this.currentMessages[this.currentMessages.length - 1];
+      if (!latestMessage) {
+        latestMessage = {
+          messageId: responseMessageId,
+          conversationId,
+          parentMessageId: userMessage.messageId,
+          isCreatedByUser: false,
+          model: this.modelOptions.model,
+          sender: this.sender,
+          text: generation,
+        };
+        this.currentMessages.push(userMessage, latestMessage);
+      } else {
+        latestMessage.text = generation;
+      }
+    } else {
+      this.currentMessages.push(userMessage);
+    }
 
     let {
       prompt: payload,
@@ -398,7 +441,7 @@ class BaseClient {
       this.currentMessages,
       // When the userMessage is pushed to currentMessages, the parentMessage is the userMessageId.
       // this only matters when buildMessages is utilizing the parentMessageId, and may vary on implementation
-      userMessage.messageId,
+      isEdited ? head : userMessage.messageId,
       this.getBuildMessagesOptions(opts),
     );
 
@@ -423,15 +466,19 @@ class BaseClient {
       this.handleTokenCountMap(tokenCountMap);
     }
 
-    await this.saveMessageToDatabase(userMessage, saveOptions, user);
+    if (!isEdited) {
+      await this.saveMessageToDatabase(userMessage, saveOptions, user);
+    }
+
     const responseMessage = {
       messageId: responseMessageId,
       conversationId,
       parentMessageId: userMessage.messageId,
       isCreatedByUser: false,
+      isEdited,
       model: this.modelOptions.model,
       sender: this.sender,
-      text: await this.sendCompletion(payload, opts),
+      text: addSpaceIfNeeded(generation) + (await this.sendCompletion(payload, opts)),
       promptTokens,
     };
 
@@ -453,7 +500,7 @@ class BaseClient {
       console.debug('Loading history for conversation', conversationId, parentMessageId);
     }
 
-    const messages = (await getMessages({ conversationId })) || [];
+    const messages = (await getMessages({ conversationId })) ?? [];
 
     if (messages.length === 0) {
       return [];
@@ -468,7 +515,7 @@ class BaseClient {
   }
 
   async saveMessageToDatabase(message, endpointOptions, user = null) {
-    await saveMessage({ ...message, unfinished: false, cancelled: false });
+    await saveMessage({ ...message, user, unfinished: false, cancelled: false });
     await saveConvo(user, {
       conversationId: message.conversationId,
       endpoint: this.options.endpoint,
@@ -517,44 +564,37 @@ class BaseClient {
    * Algorithm adapted from "6. Counting tokens for chat API calls" of
    * https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
    *
-   * An additional 2 tokens need to be added for metadata after all messages have been counted.
+   * An additional 3 tokens need to be added for assistant label priming after all messages have been counted.
    *
-   * @param {*} message
+   * @param {Object} message
    */
   getTokenCountForMessage(message) {
-    let tokensPerMessage;
-    let nameAdjustment;
-    if (this.modelOptions.model.startsWith('gpt-4')) {
-      tokensPerMessage = 3;
-      nameAdjustment = 1;
-    } else {
+    // Note: gpt-3.5-turbo and gpt-4 may update over time. Use default for these as well as for unknown models
+    let tokensPerMessage = 3;
+    let tokensPerName = 1;
+
+    if (this.modelOptions.model === 'gpt-3.5-turbo-0301') {
       tokensPerMessage = 4;
-      nameAdjustment = -1;
+      tokensPerName = -1;
     }
 
-    if (this.options.debug) {
-      console.debug('getTokenCountForMessage', message);
-    }
-
-    // Map each property of the message to the number of tokens it contains
-    const propertyTokenCounts = Object.entries(message).map(([key, value]) => {
-      if (key === 'tokenCount' || typeof value !== 'string') {
-        return 0;
+    let numTokens = tokensPerMessage;
+    for (let [key, value] of Object.entries(message)) {
+      numTokens += this.getTokenCount(value);
+      if (key === 'name') {
+        numTokens += tokensPerName;
       }
-      // Count the number of tokens in the property value
-      const numTokens = this.getTokenCount(value);
-
-      // Adjust by `nameAdjustment` tokens if the property key is 'name'
-      const adjustment = key === 'name' ? nameAdjustment : 0;
-      return numTokens + adjustment;
-    });
-
-    if (this.options.debug) {
-      console.debug('propertyTokenCounts', propertyTokenCounts);
     }
 
-    // Sum the number of tokens in all properties and add `tokensPerMessage` for metadata
-    return propertyTokenCounts.reduce((a, b) => a + b, tokensPerMessage);
+    return numTokens;
+  }
+
+  async sendPayload(payload, opts = {}) {
+    if (opts && typeof opts === 'object') {
+      this.setOptions(opts);
+    }
+
+    return await this.sendCompletion(payload, opts);
   }
 }
 

@@ -1,4 +1,7 @@
-import { TMessage, EModelEndpoint, TConversation } from './schemas';
+import type { TResPlugin, TMessage, TConversation, TEndpointOption } from './schemas';
+import type { UseMutationResult } from '@tanstack/react-query';
+
+export type TMutation = UseMutationResult<unknown>;
 
 export * from './schemas';
 
@@ -7,39 +10,17 @@ export type TMessages = TMessage[];
 export type TMessagesAtom = TMessages | null;
 
 export type TSubmission = {
-  clientId?: string;
-  context?: string;
-  conversationId?: string;
-  conversationSignature?: string;
-  current: boolean;
-  endpoint: EModelEndpoint | null;
-  invocationId: number;
-  isCreatedByUser: boolean;
-  jailbreak: boolean;
-  jailbreakConversationId?: string;
-  messageId: string;
-  overrideParentMessageId?: string | boolean;
-  parentMessageId?: string;
-  sender: string;
-  systemMessage?: string;
-  text: string;
-  toneStyle?: string;
-  model?: string;
-  promptPrefix?: string;
-  temperature?: number;
-  top_p?: number;
-  presence_penalty?: number;
-  frequence_penalty?: number;
-  conversation: TConversation;
+  plugin?: TResPlugin;
+  plugins?: TResPlugin[];
   message: TMessage;
+  isEdited?: boolean;
+  isContinued?: boolean;
+  messages: TMessage[];
+  isRegenerate?: boolean;
+  conversationId?: string;
+  initialResponse: TMessage;
+  conversation: TConversation;
   endpointOption: TEndpointOption;
-};
-
-export type TEndpointOption = {
-  endpoint: EModelEndpoint | null;
-  model?: string;
-  promptPrefix?: string;
-  temperature?: number;
 };
 
 export type TPluginAction = {
@@ -61,6 +42,7 @@ export type TError = {
     data?: {
       message?: string;
     };
+    status?: number;
   };
 };
 
@@ -82,6 +64,18 @@ export type TGetConversationsResponse = {
   pageNumber: string;
   pageSize: string | number;
   pages: string | number;
+};
+
+export type TUpdateMessageRequest = {
+  conversationId: string;
+  messageId: string;
+  text: string;
+};
+
+export type TUpdateUserKeyRequest = {
+  name: string;
+  value: string;
+  expiresAt: string;
 };
 
 export type TUpdateConversationRequest = {
@@ -116,31 +110,17 @@ export type TSearchResults = {
   filter: object;
 };
 
-export type TEndpointsConfig = {
-  azureOpenAI: {
-    availableModels: [];
-  } | null;
-  bingAI: {
-    availableModels: [];
-  } | null;
-  chatGPTBrowser: {
-    availableModels: [];
-  } | null;
-  anthropic: {
-    availableModels: [];
-  } | null;
-  google: {
-    availableModels: [];
-  } | null;
-  openAI: {
-    availableModels: [];
-  } | null;
-  gptPlugins: {
-    availableModels: [];
-    availableTools?: [];
-    plugins?: [];
-  } | null;
+export type TConfig = {
+  availableModels?: [];
+  userProvide?: boolean | null;
+  availableTools?: [];
+  plugins?: [];
+  azure?: boolean;
 };
+
+export type TModelsConfig = Record<string, string[]>;
+
+export type TEndpointsConfig = Record<string, TConfig | null>;
 
 export type TUpdateTokenCountResponse = {
   count: number;
@@ -182,8 +162,9 @@ export type TResetPassword = {
 };
 
 export type TStartupConfig = {
-  appTitle: boolean;
+  appTitle: string;
   googleLoginEnabled: boolean;
+  facebookLoginEnabled: boolean;
   openidLoginEnabled: boolean;
   githubLoginEnabled: boolean;
   openidLabel: string;
@@ -200,6 +181,10 @@ export type TStartupConfig = {
 export type TRefreshTokenResponse = {
   token: string;
   user: TUser;
+};
+
+export type TCheckUserKeyResponse = {
+  expiresAt: string;
 };
 
 export type TRequestPasswordResetResponse = {
