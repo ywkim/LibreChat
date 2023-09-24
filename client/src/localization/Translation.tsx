@@ -1,6 +1,7 @@
 import English from './languages/Eng';
 import Chinese from './languages/Zh';
 import Italy from './languages/It';
+import Korean from './languages/Ko';
 // === import additional language files here === //
 
 // New method on String allow using "{\d}" placeholder for
@@ -29,6 +30,9 @@ export const getTranslations = (langCode: string) => {
   }
   if (langCode === 'it') {
     return Italy;
+  }
+  if (langCode === 'ko') {
+    return Korean;
   }
   // === add conditionals here for additional languages here === //
   return English; // default to English
