@@ -18,6 +18,8 @@ router.get('/', async function (req, res) {
     const serverDomain = process.env.DOMAIN_SERVER || 'http://localhost:3080';
     const registrationEnabled = process.env.ALLOW_REGISTRATION === 'true';
     const socialLoginEnabled = process.env.ALLOW_SOCIAL_LOGIN === 'true';
+    const slackInviteEnabled = !!process.env.SLACK_INVITE_URL;
+    const slackInviteUrl = process.env.SLACK_INVITE_URL;
 
     return res.status(200).send({
       appTitle,
@@ -30,6 +32,8 @@ router.get('/', async function (req, res) {
       serverDomain,
       registrationEnabled,
       socialLoginEnabled,
+      slackInviteEnabled,
+      slackInviteUrl,
     });
   } catch (err) {
     console.error(err);
