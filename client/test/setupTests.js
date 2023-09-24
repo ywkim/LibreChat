@@ -16,3 +16,14 @@ import '@testing-library/jest-dom/extend-expect';
 // Mock canvas when run unit test cases with jest.
 // 'react-lottie' uses canvas
 import 'jest-canvas-mock';
+
+// Mock the module that manages the language state
+jest.mock('~/store/language', () => {
+  const { atom } = require('recoil');
+  return {
+    lang: atom({
+      key: 'mockLang',
+      default: 'en',
+    }),
+  };
+});
