@@ -81,7 +81,7 @@
     "name": "Ask Web",
     "pluginKey": "webpage-qa",
     "description": "Use this when you need to answer questions about specific webpages.",
-    "icon": "https://upload.wikimedia.org/wikipedia/en/e/e5/FinnAdventureTime.png",
+    "icon": "https://static.wikia.nocookie.net/adventuretimewithfinnandjake/images/e/ea/Young_Jake.png",
     "isAuthRequired": "false",
     "authConfig": []
   },
