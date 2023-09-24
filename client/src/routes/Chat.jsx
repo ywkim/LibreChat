@@ -5,14 +5,14 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 
 import Landing from '../components/ui/Landing';
 import Messages from '../components/Messages';
-import TextChat from '../components/Input';
+import TextChat from '../components/Input/TextChat';
 
 import store from '~/store';
 import {
   useGetMessagesByConvoId,
   useGetConversationByIdMutation,
   useGetStartupConfig,
-} from '@librechat/data-provider';
+} from 'librechat-data-provider';
 
 export default function Chat() {
   const { isAuthenticated } = useAuthContext();

@@ -6,7 +6,7 @@ import LightningIcon from '../svg/LightningIcon';
 import CautionIcon from '../svg/CautionIcon';
 import store from '~/store';
 import { localize } from '~/localization/Translation';
-import { useGetStartupConfig } from '@librechat/data-provider';
+import { useGetStartupConfig } from 'librechat-data-provider';
 
 export default function Landing() {
   const { data: config } = useGetStartupConfig();
@@ -30,6 +30,7 @@ export default function Landing() {
       <div className="w-full px-6 text-gray-800 dark:text-gray-100 md:flex md:max-w-2xl md:flex-col lg:max-w-3xl">
         <h1
           id="landing-title"
+          data-testid="landing-title"
           className="mb-10 ml-auto mr-auto mt-6 flex items-center justify-center gap-2 text-center text-4xl font-semibold sm:mb-16 md:mt-[10vh]"
         >
           {config?.appTitle || 'LibreChat'}

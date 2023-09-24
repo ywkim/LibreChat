@@ -1,18 +1,23 @@
 import English from './languages/Eng';
 import Chinese from './languages/Zh';
-import Italy from './languages/It';
+import German from './languages/De';
+import Italian from './languages/It';
+import Portuguese from './languages/Br';
+import Spanish from './languages/Es';
+import French from './languages/Fr';
 import Korean from './languages/Ko';
 // === import additional language files here === //
 
 // New method on String allow using "{\d}" placeholder for
 // loading value dynamically.
-interface String {
-  format(...replacements: string[]): string;
+declare global {
+  interface String {
+    format(...replacements: string[]): string;
+  }
 }
 
 if (!String.prototype.format) {
-  String.prototype.format = function () {
-    var args = arguments;
+  String.prototype.format = function (...args: string[]) {
     return this.replace(/{(\d+)}/g, function (match, number) {
       return typeof args[number] != 'undefined' ? args[number] : match;
     });
@@ -28,12 +33,25 @@ export const getTranslations = (langCode: string) => {
   if (langCode === 'cn') {
     return Chinese;
   }
+  if (langCode === 'fr') {
+    return French;
+  }
+  if (langCode === 'de') {
+    return German;
+  }
   if (langCode === 'it') {
-    return Italy;
+    return Italian;
+  }
+  if (langCode === 'br') {
+    return Portuguese;
+  }
+  if (langCode === 'es') {
+    return Spanish;
   }
   if (langCode === 'ko') {
     return Korean;
   }
+
   // === add conditionals here for additional languages here === //
   return English; // default to English
 };
@@ -46,6 +64,11 @@ export const localize = (langCode: string, phraseKey: string, ...values: string[
     return lang[phraseKey].format(...values);
   }
 
-  // Fall back logic to cover untranslated phrases
-  return English[phraseKey].format(...values);
+  if (phraseKey in English) {
+    // Fall back logic to cover untranslated phrases
+    return English[phraseKey].format(...values);
+  }
+
+  // In case the key is not defined, return empty instead of throw errors.
+  return '';
 };

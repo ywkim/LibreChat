@@ -1,18 +1,17 @@
 import * as Tabs from '@radix-ui/react-tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/Dialog.tsx';
-import { General } from './SettingsTabs/';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui';
+import { General } from './SettingsTabs';
 import { CogIcon } from '~/components/svg';
 import { useEffect, useState } from 'react';
 import { cn } from '~/utils/';
-import { useClearConversationsMutation } from '@librechat/data-provider';
+import { useRecoilValue } from 'recoil';
+import { localize } from '~/localization/Translation';
 import store from '~/store';
 
 export default function Settings({ open, onOpenChange }) {
-  const { newConversation } = store.useConversation();
-  const { refreshConversations } = store.useConversations();
-  const clearConvosMutation = useClearConversationsMutation();
   const [confirmClear, setConfirmClear] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const lang = useRecoilValue(store.lang);
 
   // check if mobile dynamically and update
   useEffect(() => {
@@ -27,13 +26,6 @@ export default function Settings({ open, onOpenChange }) {
     checkMobile();
     window.addEventListener('resize', checkMobile);
   }, []);
-
-  useEffect(() => {
-    if (clearConvosMutation.isSuccess) {
-      refreshConversations();
-      newConversation();
-    }
-  }, [clearConvosMutation.isSuccess, newConversation, refreshConversations]);
 
   useEffect(() => {
     // If the user clicks in the dialog when confirmClear is true, set it to false
@@ -53,10 +45,10 @@ export default function Settings({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn('shadow-2xl dark:bg-gray-900 dark:text-white')}>
+      <DialogContent className={cn('shadow-2xl dark:bg-gray-900 dark:text-white md:w-[680px] ')}>
         <DialogHeader>
           <DialogTitle className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200">
-            Settings
+            {localize(lang, 'com_nav_settings')}
           </DialogTitle>
         </DialogHeader>
         <div className="px-6">
@@ -77,14 +69,14 @@ export default function Settings({ open, onOpenChange }) {
             >
               <Tabs.Trigger
                 className={cn(
-                  'radix-state-active:bg-gray-800 radix-state-active:text-white flex items-center justify-start gap-2 rounded-md px-2 py-1.5 text-sm',
+                  'flex items-center justify-start gap-2 rounded-md px-2 py-1.5 text-sm radix-state-active:bg-gray-800 radix-state-active:text-white',
                   isMobile &&
-                    'dark:radix-state-active:text-white group flex-1 items-center justify-center text-sm dark:text-gray-500',
+                    'group flex-1 items-center justify-center text-sm dark:text-gray-500 dark:radix-state-active:text-white',
                 )}
                 value="general"
               >
                 <CogIcon />
-                General
+                {localize(lang, 'com_nav_setting_general')}
               </Tabs.Trigger>
             </Tabs.List>
             <General />
