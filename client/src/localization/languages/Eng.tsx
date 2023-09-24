@@ -64,6 +64,8 @@ export default {
   com_auth_username_min_length: 'Username must be at least 3 characters',
   com_auth_username_max_length: 'Username must be less than 20 characters',
   com_auth_already_have_account: 'Already have an account?',
+  com_auth_tough_registration: "Is registration a bit tough? Let's solve it together on Slack.",
+  com_auth_join_slack: 'Join Slack',
   com_auth_login: 'Login',
   com_auth_reset_password: 'Reset your password',
   com_auth_click: 'Click',
