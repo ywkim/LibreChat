@@ -193,6 +193,8 @@ export type TStartupConfig = {
   registrationEnabled: boolean;
   socialLoginEnabled: boolean;
   emailEnabled: boolean;
+  slackInviteEnabled: boolean;
+  slackInviteUrl: string;
 };
 
 export type TRefreshTokenResponse = {

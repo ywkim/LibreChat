@@ -23,6 +23,8 @@ router.get('/', async function (req, res) {
       !!process.env.EMAIL_USERNAME &&
       !!process.env.EMAIL_PASSWORD &&
       !!process.env.EMAIL_FROM;
+    const slackInviteEnabled = !!process.env.SLACK_INVITE_URL;
+    const slackInviteUrl = process.env.SLACK_INVITE_URL;
 
     return res.status(200).send({
       appTitle,
@@ -36,6 +38,8 @@ router.get('/', async function (req, res) {
       registrationEnabled,
       socialLoginEnabled,
       emailEnabled,
+      slackInviteEnabled,
+      slackInviteUrl,
     });
   } catch (err) {
     console.error(err);
