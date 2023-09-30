@@ -1,7 +1,7 @@
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
-  name: librechat-certificate
+  name: {{ include "librechat-backend.fullname" . }}
 spec:
   domains:
-    - aluvu.io
+    - {{ .Values.appHost }}
