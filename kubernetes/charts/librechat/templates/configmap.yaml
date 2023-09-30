@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-env
+data:
+  {{- toYaml .Values.env | nindent 2 }}
+  APP_TITLE: {{ .Values.appTitle }}
+  MONGO_URI: {{ .Values.mongoUri }}
+  CREDS_KEY: {{ .Values.credsKey }}
+  CREDS_IV: {{ .Values.credsIv }}
+  JWT_SECRET: {{ .Values.jwtSecret }}
+  JWT_REFRESH_SECRET: {{ .Values.jwtRefreshSecret }}
+  GOOGLE_CLIENT_ID: {{ .Values.googleClientId }}
+  GOOGLE_CLIENT_SECRET: {{ .Values.googleClientSecret }}
+  DOMAIN_CLIENT: {{ .Values.domainClient }}
+  DOMAIN_SERVER: {{ .Values.domainServer }}
+  PINECONE_INDEX: {{ .Values.pineconeIndex }}
+  PINECONE_API_KEY: {{ .Values.pineconeApiKey }}
+  PINECONE_ENVIRONMENT: {{ .Values.pineconeEnvironment }}
+  SLACK_INVITE_URL: {{ .Values.slackInviteUrl }}

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "librechat-backend.fullname" . }}
+  labels:
+    app: librechat-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: librechat-backend
+  template:
+    metadata:
+      labels:
+        app: librechat-backend
+    spec:
+      containers:
+        - name: librechat-backend
+          image: {{ .Values.image }}
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-env
+          ports:
+          - containerPort: {{ .Values.env.PORT }}

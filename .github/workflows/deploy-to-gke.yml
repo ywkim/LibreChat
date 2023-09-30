@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     env:
       PROJECT_ID: alola-librechat
@@ -29,6 +29,33 @@ jobs:
     - name: Configure Docker to use gcloud command-line tool as a credential helper
       run: gcloud auth configure-docker
 
+    - name: Build and push Docker image
+      run: |
+        IMAGE=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}
+        docker build -t ${IMAGE} .
+        docker push ${IMAGE}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: alola-librechat
+      APP_NAME: librechat
+      CLUSTER_NAME: librechat
+      ZONE: asia-northeast3-b
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCLOUD_AUTH }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+
     - name: Get GKE credentials
       uses: google-github-actions/get-gke-credentials@v1
       with:
@@ -36,26 +63,32 @@ jobs:
         location: ${{ env.ZONE }}
         credentials: ${{ secrets.GCLOUD_AUTH }}
 
-    - name: Build and push Docker image
-      run: |
-        IMAGE=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}
-        docker build -t ${IMAGE} .
-        docker push ${IMAGE}
-
     - name: Deploy to GKE
       run: |
-        kubectl apply -f kubernetes/librechat-deployment.yaml
-        kubectl apply -f kubernetes/librechat-service.yaml
-        kubectl apply -f kubernetes/librechat-managed-cert.yaml
-        kubectl apply -f kubernetes/librechat-ingress.yaml
+        helm upgrade --install --atomic --wait librechat ./kubernetes/charts/librechat \
+        --set image=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
+        --set appHost=aluvu.io \
+        --set appTitle=AluvU \
+        --set mongoUri="mongodb+srv://ywkim:libre1234@librechat.ydd2wlc.mongodb.net/?retryWrites=true" \
+        --set credsKey="9d50923da7e19281ed36da703f5ec5cd892079c55313a050cadff35351d3d854" \
+        --set credsIv="a4569c3f95247e03cb213212992981e7" \
+        --set jwtSecret="5a145f7ac7eeb94ba7bc2a012d5d426b845317bdcf7057c6b2771853bd2cb0b1" \
+        --set jwtRefreshSecret="780e0543611bc368bae5f0f4d65a1b8d2c573e2e62ab83ab1d861b9d55309a70" \
+        --set googleClientId="528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com" \
+        --set googleClientSecret="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" \
+        --set domainClient="https://aluvu.io" \
+        --set domainServer="https://aluvu.io" \
+        --set pineconeIndex="libre" \
+        --set pineconeApiKey="5e7fcda7-e184-4ece-9049-47768599ec9a" \
+        --set pineconeEnvironment="us-west4-gcp-free" \
+        --set slackInviteUrl="https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ"
 
-    - name: Update image in deployment
+    - name: Summary
       run: |
-        IMAGE=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}
-        kubectl set image deployment/${{ env.APP_NAME }} ${{ env.APP_NAME }}=${IMAGE}
-
-    - name: Verify deployment
-      run: |
-        sleep 60
-        kubectl get deployments
-        kubectl get services
+        echo "## 🚀 Success! Your app was deployed to GKE 🚀" >> $GITHUB_STEP_SUMMARY
+        echo "Deployed image(s): " >> $GITHUB_STEP_SUMMARY
+        kubectl get pods -o jsonpath="{.items[*].spec.containers[*].image}" |\
+          tr -s '[[:space:]]' '\n' |\
+          sort |\
+          uniq |\
+          sed 's/^/- /' >> $GITHUB_STEP_SUMMARY

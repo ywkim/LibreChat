@@ -1,0 +1,13 @@
+# NodePort Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "librechat-backend.fullname" . }}
+spec:
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: {{ .Values.env.PORT }}
+  selector:
+    app: librechat-backend
