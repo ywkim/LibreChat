@@ -95,6 +95,15 @@ var SSE = function (url, options) {
 
   this._onStreamFailure = function (e) {
     console.log('Stream failure', e); // 로깅 추가
+    console.log('Event type:', e.type); // 이벤트 유형
+    console.log('Bubbles:', e.bubbles); // 이벤트가 이벤트 체인을 통해 상위로 버블링되는지 여부
+    console.log('Cancelable:', e.cancelable); // 이벤트가 취소 가능한지 여부
+    console.log('Event phase:', e.eventPhase); // 이벤트가 전파되는 단계
+    console.log('Time stamp:', e.timeStamp); // 이벤트가 생성된 날짜와 시간
+    console.log('Default prevented:', e.defaultPrevented); // 이벤트가 기본 동작을 방지했는지 여부
+    console.log('XHR Ready State:', e.target.readyState); // XHR 객체의 상태
+    console.log('XHR Status:', e.target.status); // HTTP 상태 코드
+    console.log('XHR Status Text:', e.target.statusText); // 상태 코드에 대한 텍스트 설명
     var event = new CustomEvent('error');
     event.data = e.currentTarget.response;
     this.dispatchEvent(event);
