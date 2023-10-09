@@ -123,6 +123,7 @@ var SSE = function (url, options) {
         window.dispatchEvent(new CustomEvent('tokenUpdated', { detail: refreshResponse.token }));
         this.stream();
       } catch (err) {
+        console.log('Handle 401 error', err); // 로깅 추가
         this._onStreamFailure(e);
         return;
       }
