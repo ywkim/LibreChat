@@ -94,6 +94,7 @@ var SSE = function (url, options) {
   };
 
   this._onStreamFailure = function (e) {
+    console.log('Stream failure', e); // 로깅 추가
     var event = new CustomEvent('error');
     event.data = e.currentTarget.response;
     this.dispatchEvent(event);
@@ -126,6 +127,7 @@ var SSE = function (url, options) {
         return;
       }
     } else if (this.xhr.status !== 200) {
+      console.log('Non-200 status code', this.xhr.status); // 로깅 추가
       this._onStreamFailure(e);
       return;
     }
@@ -220,6 +222,7 @@ var SSE = function (url, options) {
       this.xhr.setRequestHeader(header, this.headers[header]);
     }
     this.xhr.withCredentials = this.withCredentials;
+    console.log('Sending request'); // 로깅 추가
     this.xhr.send(this.payload);
   };
 
@@ -228,6 +231,7 @@ var SSE = function (url, options) {
       return;
     }
 
+    console.log('Closing connection'); // 로깅 추가
     this.xhr.abort();
     this.xhr = null;
     this._setReadyState(this.CLOSED);
