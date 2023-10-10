@@ -1,8 +1,9 @@
-# NodePort Service
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "librechat-backend.fullname" . }}
+  annotations:
+    cloud.google.com/backend-config: '{"default": "{{ include "librechat-backend.fullname" . }}"}'
 spec:
   type: NodePort
   ports:
