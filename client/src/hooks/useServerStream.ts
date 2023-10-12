@@ -223,8 +223,6 @@ export default function useServerStream(submission: TSubmission | null) {
     });
 
     events.onmessage = (e: MessageEvent) => {
-      console.log('Event received', e.data); // 로그 추가
-
       const data = JSON.parse(e.data);
 
       if (data.final) {
@@ -248,19 +246,13 @@ export default function useServerStream(submission: TSubmission | null) {
       }
     };
 
-    events.onopen = () => {
-      console.log('connection is opened');
-      console.log('headers:', events.headers);
-      console.log('url:', events.url);
-    };
+    events.onopen = () => console.log('connection is opened');
 
-    events.oncancel = () => {
-      console.log('Connection cancelled');
+    events.oncancel = () =>
       abortConversation(message?.conversationId ?? submission?.conversationId, submission);
-    };
 
     events.onerror = function (e: MessageEvent) {
-      console.log('Error occurred', e); // 에러 정보 로거에 추가
+      console.log('error in opening conn.');
       events.close();
 
       const data = JSON.parse(e.data);
@@ -276,12 +268,9 @@ export default function useServerStream(submission: TSubmission | null) {
       events.close();
       // setSource(null);
       if (isCancelled) {
-        console.log('Cancelling'); // 추가
         const e = new Event('cancel');
         events.dispatchEvent(e);
       }
-
-      console.log('Ending connection');
       setIsSubmitting(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
