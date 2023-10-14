@@ -69,13 +69,13 @@ jobs:
         --set image=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
         --set appHost=aluvu.io \
         --set appTitle=AluvU \
-        --set mongoUri="mongodb+srv://ywkim:libre1234@librechat.ydd2wlc.mongodb.net/?retryWrites=true" \
-        --set credsKey="9d50923da7e19281ed36da703f5ec5cd892079c55313a050cadff35351d3d854" \
-        --set credsIv="a4569c3f95247e03cb213212992981e7" \
-        --set jwtSecret="5a145f7ac7eeb94ba7bc2a012d5d426b845317bdcf7057c6b2771853bd2cb0b1" \
-        --set jwtRefreshSecret="780e0543611bc368bae5f0f4d65a1b8d2c573e2e62ab83ab1d861b9d55309a70" \
+        --set mongoUri=${{ secrets.MONGO_URI }} \
+        --set credsKey=${{ secrets.CREDS_KEY }} \
+        --set credsIv=${{ secrets.CREDS_IV }} \
+        --set jwtSecret=${{ secrets.JWT_SECRET }} \
+        --set jwtRefreshSecret=${{ secrets.JWT_REFRESH_SECRET }} \
         --set googleClientId="528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com" \
-        --set googleClientSecret="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" \
+        --set googleClientSecret=${{ secrets.GOOGLE_CLIENT_SECRET }} \
         --set domainClient="https://aluvu.io" \
         --set domainServer="https://aluvu.io" \
         --set pineconeIndex="libre" \
