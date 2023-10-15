@@ -61,7 +61,6 @@ jobs:
       with:
         cluster_name: ${{ env.CLUSTER_NAME }}
         location: ${{ env.ZONE }}
-        credentials: ${{ secrets.GCLOUD_AUTH }}
 
     - name: Deploy to GKE
       run: |
