@@ -1,8 +1,14 @@
+const { isEnabled } = require('../server/utils');
 const throttle = require('lodash/throttle');
 
 const titleConvo = async ({ text, response }) => {
   let title = 'New Chat';
-  const { BingAIClient } = await import('@waylaidwanderer/chatgpt-api');
+  const { TITLE_CONVO = 'true' } = process.env ?? {};
+  if (!isEnabled(TITLE_CONVO)) {
+    return title;
+  }
+
+  const { BingAIClient } = await import('nodejs-gpt');
   const titleGenerator = new BingAIClient({
     userToken: process.env.BINGAI_TOKEN,
     debug: false,

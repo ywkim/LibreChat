@@ -14,7 +14,7 @@ export default function Footer() {
         rel="noreferrer"
         className="underline"
       >
-        {config?.appTitle || 'LibreChat'} v0.5.9
+        {config?.appTitle || 'LibreChat'} v0.6.0
       </a>
     </div>
   );
