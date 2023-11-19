@@ -16,6 +16,7 @@ const {
   HttpRequestTool,
   OpenAICreateImage,
   StableDiffusionAPI,
+  DALLE3,
   StructuredSD,
   WebQA,
   SearchQA,
@@ -232,6 +233,7 @@ const loadTools = async ({
   const requestedTools = {};
 
   if (functions) {
+    toolConstructors.dalle = DALLE3;
     toolConstructors.codesherpa = CodeSherpa;
   }
 

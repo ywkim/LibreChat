@@ -183,6 +183,7 @@ export type TStartupConfig = {
   slackInviteEnabled: boolean;
   slackInviteUrl: string;
   checkBalance: boolean;
+  customFooter?: string;
 };
 
 export type TRefreshTokenResponse = {
