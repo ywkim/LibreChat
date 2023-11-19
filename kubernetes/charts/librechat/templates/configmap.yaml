@@ -14,7 +14,4 @@ data:
   GOOGLE_CLIENT_SECRET: {{ .Values.googleClientSecret }}
   DOMAIN_CLIENT: {{ .Values.domainClient }}
   DOMAIN_SERVER: {{ .Values.domainServer }}
-  PINECONE_INDEX: {{ .Values.pineconeIndex }}
-  PINECONE_API_KEY: {{ .Values.pineconeApiKey }}
-  PINECONE_ENVIRONMENT: {{ .Values.pineconeEnvironment }}
   SLACK_INVITE_URL: {{ .Values.slackInviteUrl }}
