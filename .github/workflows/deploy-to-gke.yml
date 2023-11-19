@@ -77,9 +77,6 @@ jobs:
         --set googleClientSecret=${{ secrets.GOOGLE_CLIENT_SECRET }} \
         --set domainClient="https://aluvu.io" \
         --set domainServer="https://aluvu.io" \
-        --set pineconeIndex="libre" \
-        --set pineconeApiKey="5e7fcda7-e184-4ece-9049-47768599ec9a" \
-        --set pineconeEnvironment="us-west4-gcp-free" \
         --set slackInviteUrl="https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ"
 
     - name: Summary

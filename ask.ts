@@ -1,9 +1,7 @@
 import { initializeAgentExecutorWithOptions } from 'langchain/agents';
 import { ChatOpenAI } from 'langchain/chat_models/openai';
 import { OpenAIEmbeddings } from 'langchain/embeddings';
-import { PineconeClient } from '@pinecone-database/pinecone';
 import WebQA from './api/app/clients/tools/WebQA';
-import BookQA from './api/app/clients/tools/BookQA';
 import * as fs from 'fs';
 import * as util from 'util';
 import * as dotenv from 'dotenv';
@@ -36,23 +34,7 @@ async function loadTools(config: any) {
     openAIApiKey: process.env.OPENAI_API_KEY,
   });
   const embeddings = new OpenAIEmbeddings({ openAIApiKey: process.env.OPENAI_API_KEY });
-  let pineconeApiKey = process.env.PINECONE_API_KEY;
-  let pineconeEnvironment = process.env.PINECONE_ENVIRONMENT;
-  let indexName = process.env.PINECONE_INDEX;
-  const client = new PineconeClient();
-  await client.init({
-    apiKey: pineconeApiKey!,
-    environment: pineconeEnvironment!,
-  });
-  const pineconeIndex = client.Index(indexName!);
-  return [
-    new WebQA({ llm, embeddings }),
-    new BookQA({
-      llm,
-      embeddings,
-      pineconeIndex,
-    }),
-  ];
+  return [new WebQA({ llm, embeddings })];
 }
 
 async function initAgentWithTools(config: any) {

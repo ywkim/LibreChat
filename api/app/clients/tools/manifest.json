@@ -133,14 +133,6 @@
     "authConfig": []
   },
   {
-    "name": "Ask Book",
-    "pluginKey": "book-qa",
-    "description": "Use this when you need to answer questions about specific book or document.",
-    "icon": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnNfaaXVrDAdWHW01eLdKIAARLmh5GY5il6Q&usqp=CAU",
-    "isAuthRequired": "false",
-    "authConfig": []
-  },
-  {
     "name": "Stable Diffusion",
     "pluginKey": "stable-diffusion",
     "description": "Generate photo-realistic images given any text input.",

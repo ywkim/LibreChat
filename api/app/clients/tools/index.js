@@ -10,7 +10,6 @@ const StructuredWolfram = require('./structured/Wolfram');
 const SelfReflectionTool = require('./SelfReflection');
 const WebQA = require('./WebQA');
 const SearchQA = require('./SearchQA');
-const BookQA = require('./BookQA');
 const AzureCognitiveSearch = require('./AzureCognitiveSearch');
 const StructuredACS = require('./structured/AzureCognitiveSearch');
 const ChatTool = require('./structured/ChatTool');
@@ -35,7 +34,6 @@ module.exports = {
   SelfReflectionTool,
   WebQA,
   SearchQA,
-  BookQA,
   AzureCognitiveSearch,
   StructuredACS,
   E2BTools,
