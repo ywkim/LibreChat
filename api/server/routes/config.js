@@ -27,7 +27,7 @@ router.get('/', async function (req, res) {
         !!process.env.EMAIL_PASSWORD &&
         !!process.env.EMAIL_FROM,
       checkBalance: isEnabled(process.env.CHECK_BALANCE),
-      slackInviteEnabled: isEnabled(process.env.SLACK_INVITE_URL),
+      slackInviteEnabled: !!process.env.SLACK_INVITE_URL,
       slackInviteUrl: process.env.SLACK_INVITE_URL,
     };
 
