@@ -65,6 +65,7 @@ jobs:
     - name: Deploy to GKE
       run: |
         helm upgrade --install --atomic --wait librechat ./kubernetes/charts/librechat \
+        --timeout 20m0s \
         --set image=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
         --set appHost=aluvu.io \
         --set appTitle=AluvU \
