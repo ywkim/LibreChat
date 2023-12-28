@@ -56,36 +56,15 @@ jobs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
 
-    - name: Get GKE credentials
-      uses: google-github-actions/get-gke-credentials@v1
-      with:
-        cluster_name: ${{ env.CLUSTER_NAME }}
-        location: ${{ env.ZONE }}
-
-    - name: Deploy to GKE
+    - name: Deploy to Cloud Run
       run: |
-        helm upgrade --install --atomic --wait librechat ./kubernetes/charts/librechat \
-        --timeout 20m0s \
-        --set image=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
-        --set appHost=aluvu.io \
-        --set appTitle=AluvU \
-        --set mongoUri=${{ secrets.MONGO_URI }} \
-        --set credsKey=${{ secrets.CREDS_KEY }} \
-        --set credsIv=${{ secrets.CREDS_IV }} \
-        --set jwtSecret=${{ secrets.JWT_SECRET }} \
-        --set jwtRefreshSecret=${{ secrets.JWT_REFRESH_SECRET }} \
-        --set googleClientId="528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com" \
-        --set googleClientSecret=${{ secrets.GOOGLE_CLIENT_SECRET }} \
-        --set domainClient="https://aluvu.io" \
-        --set domainServer="https://aluvu.io" \
-        --set slackInviteUrl="https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ"
-
-    - name: Summary
-      run: |
-        echo "## 🚀 Success! Your app was deployed to GKE 🚀" >> $GITHUB_STEP_SUMMARY
-        echo "Deployed image(s): " >> $GITHUB_STEP_SUMMARY
-        kubectl get pods -o jsonpath="{.items[*].spec.containers[*].image}" |\
-          tr -s '[[:space:]]' '\n' |\
-          sort |\
-          uniq |\
-          sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+        gcloud run deploy llm-video-backend \
+          --image gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA \
+          --allow-unauthenticated \
+          --min-instances 1 \
+          --max-instances 1 \
+          --region asia-northeast3 \
+          --timeout 600s \
+          --memory 2Gi \
+          --allow-unauthenticated \
+          --set-env-vars OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},VITO_ID=5q9DJW93Fa8s8XSe4ntm,VITO_SECRET=${{ secrets.VITO_SECRET }},STORAGE_TYPE=gcs
