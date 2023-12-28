@@ -59,7 +59,7 @@ jobs:
     - name: Deploy to Cloud Run
       run: |
         gcloud run deploy llm-video-backend \
-          --image gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA \
+          --image gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
           --allow-unauthenticated \
           --min-instances 1 \
           --max-instances 1 \
@@ -67,4 +67,19 @@ jobs:
           --timeout 600s \
           --memory 2Gi \
           --allow-unauthenticated \
+
+
+        --set appHost=aluvu.io \
+        --set appTitle=AluvU \
+        --set mongoUri=${{ secrets.MONGO_URI }} \
+        --set credsKey=${{ secrets.CREDS_KEY }} \
+        --set credsIv=${{ secrets.CREDS_IV }} \
+        --set jwtSecret=${{ secrets.JWT_SECRET }} \
+        --set jwtRefreshSecret=${{ secrets.JWT_REFRESH_SECRET }} \
+        --set googleClientId="528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com" \
+        --set googleClientSecret=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+        --set domainClient="https://aluvu.io" \
+        --set domainServer="https://aluvu.io" \
+        --set slackInviteUrl="https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ"
+
           --set-env-vars OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},VITO_ID=5q9DJW93Fa8s8XSe4ntm,VITO_SECRET=${{ secrets.VITO_SECRET }},STORAGE_TYPE=gcs
