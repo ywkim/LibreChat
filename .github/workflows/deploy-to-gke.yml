@@ -62,7 +62,7 @@ jobs:
         service: 'librechat'
         image: 'gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}'
         region: 'asia-northeast3'
-        timeout: '600s'
+        timeout: '3600s'
         env_vars: |
           APP_TITLE=AluvU
           MONGO_URI=${{ secrets.MONGO_URI }}
@@ -70,11 +70,12 @@ jobs:
           CREDS_IV=${{ secrets.CREDS_IV }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
-          GOOGLE_CLIENT_ID="528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com"
+          GOOGLE_CLIENT_ID=528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-          DOMAIN_CLIENT="https://aluvu.io"
-          DOMAIN_SERVER="https://aluvu.io"
-          SLACK_INVITE_URL="https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ"
+          DOMAIN_CLIENT=https://aluvu.io
+          DOMAIN_SERVER=https://aluvu.io
+          SLACK_INVITE_URL=https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ
         env_vars_file: 'env.yaml'
+
     - name: 'Use output'
       run: 'curl "${{ steps.deploy.outputs.url }}"'
