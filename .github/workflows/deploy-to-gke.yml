@@ -2,8 +2,6 @@ name: Continuous Deployment to GKE
 
 on:
   push:
-    branches:
-      - main
 
 jobs:
   build:
