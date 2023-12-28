@@ -16,10 +16,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v1
+      uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCLOUD_AUTH }}
 
@@ -46,29 +46,24 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v1
+      uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCLOUD_AUTH }}
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
 
-    - name: Deploy to Cloud Run
-      run: |
-        gcloud run deploy llm-video-backend \
-          --image gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
-          --allow-unauthenticated \
-          --min-instances 1 \
-          --max-instances 1 \
-          --region asia-northeast3 \
-          --timeout 600s \
-          --memory 2Gi \
-          --allow-unauthenticated \
-
-
+    - id: 'deploy'
+      uses: 'google-github-actions/deploy-cloudrun@v2'
+      with:
+        service: 'librechat'
+        image: 'gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}'
+        region: 'asia-northeast3'
+        timeout: '600s'
+        env_vars: |
         --set appHost=aluvu.io \
         --set appTitle=AluvU \
         --set mongoUri=${{ secrets.MONGO_URI }} \
@@ -82,4 +77,5 @@ jobs:
         --set domainServer="https://aluvu.io" \
         --set slackInviteUrl="https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ"
 
-          --set-env-vars OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},VITO_ID=5q9DJW93Fa8s8XSe4ntm,VITO_SECRET=${{ secrets.VITO_SECRET }},STORAGE_TYPE=gcs
+    - name: 'Use output'
+      run: 'curl "${{ steps.deploy.outputs.url }}"'
