@@ -64,18 +64,17 @@ jobs:
         region: 'asia-northeast3'
         timeout: '600s'
         env_vars: |
-        --set appHost=aluvu.io \
-        --set appTitle=AluvU \
-        --set mongoUri=${{ secrets.MONGO_URI }} \
-        --set credsKey=${{ secrets.CREDS_KEY }} \
-        --set credsIv=${{ secrets.CREDS_IV }} \
-        --set jwtSecret=${{ secrets.JWT_SECRET }} \
-        --set jwtRefreshSecret=${{ secrets.JWT_REFRESH_SECRET }} \
-        --set googleClientId="528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com" \
-        --set googleClientSecret=${{ secrets.GOOGLE_CLIENT_SECRET }} \
-        --set domainClient="https://aluvu.io" \
-        --set domainServer="https://aluvu.io" \
-        --set slackInviteUrl="https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ"
-
+          APP_TITLE=AluvU
+          MONGO_URI=${{ secrets.MONGO_URI }}
+          CREDS_KEY=${{ secrets.CREDS_KEY }}
+          CREDS_IV=${{ secrets.CREDS_IV }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+          GOOGLE_CLIENT_ID="528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com"
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          DOMAIN_CLIENT="https://aluvu.io"
+          DOMAIN_SERVER="https://aluvu.io"
+          SLACK_INVITE_URL="https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ"
+        env_vars_file: 'env.yaml'
     - name: 'Use output'
       run: 'curl "${{ steps.deploy.outputs.url }}"'
