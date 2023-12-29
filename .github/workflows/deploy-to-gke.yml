@@ -14,10 +14,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
+      uses: google-github-actions/auth@v1
       with:
         credentials_json: ${{ secrets.GCLOUD_AUTH }}
 
@@ -44,36 +44,40 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
+      uses: google-github-actions/auth@v1
       with:
         credentials_json: ${{ secrets.GCLOUD_AUTH }}
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
 
-    - id: 'deploy'
-      uses: 'google-github-actions/deploy-cloudrun@v2'
-      with:
-        service: 'librechat'
-        image: 'gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }}'
-        region: 'asia-northeast3'
-        timeout: '3600s'
-        env_vars: |
-          APP_TITLE=AluvU
-          MONGO_URI=${{ secrets.MONGO_URI }}
-          CREDS_KEY=${{ secrets.CREDS_KEY }}
-          CREDS_IV=${{ secrets.CREDS_IV }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
-          GOOGLE_CLIENT_ID=528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com
-          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-          DOMAIN_CLIENT=https://aluvu.io
-          DOMAIN_SERVER=https://aluvu.io
-          SLACK_INVITE_URL=https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ
-        env_vars_file: 'env.yaml'
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy llm-video-backend \
+          --image gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
+          --allow-unauthenticated \
+          --min-instances 1 \
+          --max-instances 1 \
+          --region asia-northeast3 \
+          --timeout 600s \
+          --memory 2Gi \
+          --allow-unauthenticated \
 
-    - name: 'Use output'
-      run: 'curl "${{ steps.deploy.outputs.url }}"'
+
+        --set appHost=aluvu.io \
+        --set appTitle=AluvU \
+        --set mongoUri=${{ secrets.MONGO_URI }} \
+        --set credsKey=${{ secrets.CREDS_KEY }} \
+        --set credsIv=${{ secrets.CREDS_IV }} \
+        --set jwtSecret=${{ secrets.JWT_SECRET }} \
+        --set jwtRefreshSecret=${{ secrets.JWT_REFRESH_SECRET }} \
+        --set googleClientId="528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com" \
+        --set googleClientSecret=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+        --set domainClient="https://aluvu.io" \
+        --set domainServer="https://aluvu.io" \
+        --set slackInviteUrl="https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ"
+
+          --set-env-vars OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},VITO_ID=5q9DJW93Fa8s8XSe4ntm,VITO_SECRET=${{ secrets.VITO_SECRET }},STORAGE_TYPE=gcs
