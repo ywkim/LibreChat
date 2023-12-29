@@ -59,7 +59,6 @@ jobs:
         gcloud run deploy librechat \
           --image gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
           --region asia-northeast3 \
-          --timeout 3600s \
           --set-env-vars HOST=0.0.0.0 \
           --set-env-vars PORT=3080 \
           --set-env-vars OPENAI_API_KEY=user_provided \
@@ -84,7 +83,8 @@ jobs:
           --set-env-vars GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
           --set-env-vars DOMAIN_CLIENT=https://aluvu.io \
           --set-env-vars DOMAIN_SERVER=https://aluvu.io \
-          --set-env-vars SLACK_INVITE_URL=https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ
+          --set-env-vars SLACK_INVITE_URL=https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ \
+          --timeout 3600s
 
     - name: 'Use output'
       run: 'curl "${{ steps.deploy.outputs.url }}"'
