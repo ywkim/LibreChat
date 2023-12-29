@@ -14,10 +14,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v1
+      uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCLOUD_AUTH }}
 
@@ -44,10 +44,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v1
+      uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCLOUD_AUTH }}
 
@@ -56,28 +56,35 @@ jobs:
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud run deploy llm-video-backend \
+        gcloud run deploy librechat \
           --image gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
-          --allow-unauthenticated \
-          --min-instances 1 \
-          --max-instances 1 \
           --region asia-northeast3 \
-          --timeout 600s \
-          --memory 2Gi \
-          --allow-unauthenticated \
+          --timeout 3600s \
+          --set-env-vars HOST=0.0.0.0 \
+          --set-env-vars PORT=3080 \
+          --set-env-vars OPENAI_API_KEY=user_provided \
+          --set-env-vars ^@^OPENAI_MODELS=gpt-3.5-turbo,gpt-3.5-turbo-16k,gpt-3.5-turbo-0301,gpt-4,gpt-4-0314,gpt-4-0613 \
+          --set-env-vars ^@^AZURE_OPENAI_MODELS=gpt-3.5-turbo,gpt-4 \
+          --set-env-vars BINGAI_TOKEN=user_provided \
+          --set-env-vars CHATGPT_TOKEN=user_provided \
+          --set-env-vars ^@^CHATGPT_MODELS=text-davinci-002-render-sha,gpt-4 \
+          --set-env-vars ^@^PLUGIN_MODELS=gpt-3.5-turbo,gpt-3.5-turbo-16k,gpt-3.5-turbo-0301,gpt-4,gpt-4-0314,gpt-4-0613 \
+          --set-env-vars ALLOW_REGISTRATION=true \
+          --set-env-vars ALLOW_SOCIAL_LOGIN=true \
+          --set-env-vars ALLOW_SOCIAL_REGISTRATION=true \
+          --set-env-vars GOOGLE_CALLBACK_URL=/oauth/google/callback \
+          --set-env-vars SESSION_EXPIRY=(1000 * 60 * 60 * 24) * 7" \
+          --set-env-vars APP_TITLE=AluvU \
+          --set-env-vars MONGO_URI=${{ secrets.MONGO_URI }} \
+          --set-env-vars CREDS_KEY=${{ secrets.CREDS_KEY }} \
+          --set-env-vars CREDS_IV=${{ secrets.CREDS_IV }} \
+          --set-env-vars JWT_SECRET=${{ secrets.JWT_SECRET }} \
+          --set-env-vars JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} \
+          --set-env-vars GOOGLE_CLIENT_ID=528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com \
+          --set-env-vars GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+          --set-env-vars DOMAIN_CLIENT=https://aluvu.io \
+          --set-env-vars DOMAIN_SERVER=https://aluvu.io \
+          --set-env-vars SLACK_INVITE_URL=https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ
 
-
-        --set appHost=aluvu.io \
-        --set appTitle=AluvU \
-        --set mongoUri=${{ secrets.MONGO_URI }} \
-        --set credsKey=${{ secrets.CREDS_KEY }} \
-        --set credsIv=${{ secrets.CREDS_IV }} \
-        --set jwtSecret=${{ secrets.JWT_SECRET }} \
-        --set jwtRefreshSecret=${{ secrets.JWT_REFRESH_SECRET }} \
-        --set googleClientId="528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com" \
-        --set googleClientSecret=${{ secrets.GOOGLE_CLIENT_SECRET }} \
-        --set domainClient="https://aluvu.io" \
-        --set domainServer="https://aluvu.io" \
-        --set slackInviteUrl="https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ"
-
-          --set-env-vars OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},VITO_ID=5q9DJW93Fa8s8XSe4ntm,VITO_SECRET=${{ secrets.VITO_SECRET }},STORAGE_TYPE=gcs
+    - name: 'Use output'
+      run: 'curl "${{ steps.deploy.outputs.url }}"'
