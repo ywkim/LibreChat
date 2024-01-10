@@ -1,25 +1,24 @@
-name: Continuous Deployment to GKE
+name: Build and Deploy to Cloud Run
 
 on:
   push:
     branches:
       - main
 
+env:
+  PROJECT_ID: alola-librechat
+  APP_NAME: librechat
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      PROJECT_ID: alola-librechat
-      APP_NAME: librechat
-      CLUSTER_NAME: librechat
-      ZONE: asia-northeast3-b
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v1
+      uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCLOUD_AUTH }}
 
@@ -38,54 +37,46 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    env:
-      PROJECT_ID: alola-librechat
-      APP_NAME: librechat
-      CLUSTER_NAME: librechat
-      ZONE: asia-northeast3-b
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v1
+      uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCLOUD_AUTH }}
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
 
-    - name: Get GKE credentials
-      uses: google-github-actions/get-gke-credentials@v1
-      with:
-        cluster_name: ${{ env.CLUSTER_NAME }}
-        location: ${{ env.ZONE }}
-
-    - name: Deploy to GKE
+    - name: Deploy to Cloud Run
       run: |
-        helm upgrade --install --atomic --wait librechat ./kubernetes/charts/librechat \
-        --timeout 20m0s \
-        --set image=gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
-        --set appHost=aluvu.io \
-        --set appTitle=AluvU \
-        --set mongoUri=${{ secrets.MONGO_URI }} \
-        --set credsKey=${{ secrets.CREDS_KEY }} \
-        --set credsIv=${{ secrets.CREDS_IV }} \
-        --set jwtSecret=${{ secrets.JWT_SECRET }} \
-        --set jwtRefreshSecret=${{ secrets.JWT_REFRESH_SECRET }} \
-        --set googleClientId="528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com" \
-        --set googleClientSecret=${{ secrets.GOOGLE_CLIENT_SECRET }} \
-        --set domainClient="https://aluvu.io" \
-        --set domainServer="https://aluvu.io" \
-        --set slackInviteUrl="https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ"
-
-    - name: Summary
-      run: |
-        echo "## 🚀 Success! Your app was deployed to GKE 🚀" >> $GITHUB_STEP_SUMMARY
-        echo "Deployed image(s): " >> $GITHUB_STEP_SUMMARY
-        kubectl get pods -o jsonpath="{.items[*].spec.containers[*].image}" |\
-          tr -s '[[:space:]]' '\n' |\
-          sort |\
-          uniq |\
-          sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+        gcloud run deploy librechat \
+          --image gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
+          --region asia-northeast1 \
+          --set-env-vars HOST=0.0.0.0 \
+          --set-env-vars OPENAI_API_KEY=user_provided \
+          --set-env-vars ^@^OPENAI_MODELS=gpt-3.5-turbo,gpt-3.5-turbo-16k,gpt-3.5-turbo-0301,gpt-4,gpt-4-0314,gpt-4-0613 \
+          --set-env-vars ^@^AZURE_OPENAI_MODELS=gpt-3.5-turbo,gpt-4 \
+          --set-env-vars BINGAI_TOKEN=user_provided \
+          --set-env-vars CHATGPT_TOKEN=user_provided \
+          --set-env-vars ^@^CHATGPT_MODELS=text-davinci-002-render-sha,gpt-4 \
+          --set-env-vars ^@^PLUGIN_MODELS=gpt-3.5-turbo,gpt-3.5-turbo-16k,gpt-3.5-turbo-0301,gpt-4,gpt-4-0314,gpt-4-0613 \
+          --set-env-vars ALLOW_REGISTRATION=true \
+          --set-env-vars ALLOW_SOCIAL_LOGIN=true \
+          --set-env-vars ALLOW_SOCIAL_REGISTRATION=true \
+          --set-env-vars GOOGLE_CALLBACK_URL=/oauth/google/callback \
+          --set-env-vars "SESSION_EXPIRY=(1000 * 60 * 60 * 24) * 7" \
+          --set-env-vars APP_TITLE=AluvU \
+          --set-env-vars MONGO_URI=${{ secrets.MONGO_URI }} \
+          --set-env-vars CREDS_KEY=${{ secrets.CREDS_KEY }} \
+          --set-env-vars CREDS_IV=${{ secrets.CREDS_IV }} \
+          --set-env-vars JWT_SECRET=${{ secrets.JWT_SECRET }} \
+          --set-env-vars JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} \
+          --set-env-vars GOOGLE_CLIENT_ID=528703483694-r88onamr2k7nti9632ihsr5igr308phv.apps.googleusercontent.com \
+          --set-env-vars GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+          --set-env-vars DOMAIN_CLIENT=https://aluvu.io \
+          --set-env-vars DOMAIN_SERVER=https://aluvu.io \
+          --set-env-vars SLACK_INVITE_URL=https://join.slack.com/t/aluvuhq/shared_invite/zt-20zzxpmcy-DfVmH58D1m21pyiwPGNlOQ \
+          --timeout 3600s
