@@ -54,7 +54,7 @@ jobs:
       run: |
         gcloud run deploy librechat \
           --image gcr.io/${{ env.PROJECT_ID }}/${{ env.APP_NAME }}:${{ github.sha }} \
-          --region asia-northeast3 \
+          --region asia-northeast1 \
           --set-env-vars HOST=0.0.0.0 \
           --set-env-vars OPENAI_API_KEY=user_provided \
           --set-env-vars ^@^OPENAI_MODELS=gpt-3.5-turbo,gpt-3.5-turbo-16k,gpt-3.5-turbo-0301,gpt-4,gpt-4-0314,gpt-4-0613 \
